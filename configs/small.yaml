@@ -1,0 +1,12 @@
+# Fast configuration for tests and CI smoke runs (about 10k events).
+simulation:
+  seed: 11
+  n_days: 60
+  n_users: 2500
+split:
+  train_end_day: 30
+  valid_end_day: 40
+  calib_end_day: 50
+model:
+  num_boost_round: 300
+  early_stopping_rounds: 30
