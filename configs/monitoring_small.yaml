@@ -1,0 +1,19 @@
+# Fast monitoring study for tests and CI (rde monitor --config configs/monitoring_small.yaml).
+simulation:
+  seed: 11
+  n_days: 120
+  n_users: 2500
+split:
+  train_end_day: 30
+  valid_end_day: 40
+  calib_end_day: 50
+model:
+  num_boost_round: 300
+  early_stopping_rounds: 30
+monitoring:
+  scenario:
+    change_day: 65
+  labels:
+    maturity_days: 30
+  monitors:
+    cohort_days: 30

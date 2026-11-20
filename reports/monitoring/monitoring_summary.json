@@ -1,0 +1,436 @@
+{
+  "deploy_day": "2026-04-01",
+  "change_day": "2026-05-01",
+  "maturity_days": 60,
+  "reference": {
+    "window": "2026-03-17 to 2026-03-31",
+    "events": 7981,
+    "rate_window": "2026-03-02 to 2026-03-31",
+    "decline_rate": 0.03317234367056431,
+    "review_rate": 0.012074224707676665,
+    "decline_dispersion": 29.238397635690422,
+    "review_dispersion": 1.0,
+    "approved_calibration": 0.8373082004476252,
+    "delay_curve_n": 554,
+    "delay_quantiles_days": {
+      "0.25": 12.303757774895878,
+      "0.5": 22.988480870086477,
+      "0.75": 36.503559045287446,
+      "0.9": 54.62497974673332
+    }
+  },
+  "scenarios": [
+    {
+      "scenario": "none",
+      "post_change_events": 53465,
+      "excess_cost_total": 0.0,
+      "excess_cost_per_day": 0.0,
+      "monitors": {
+        "feature_psi": {
+          "false_alarm_days_before_change": 0,
+          "alarm_days_after_change": 0,
+          "incident_alarm_days": 0,
+          "first_alarm_lag_days": null,
+          "first_alarm_signal": null,
+          "excess_cost_before_alarm": 0.0
+        },
+        "score_psi": {
+          "false_alarm_days_before_change": 0,
+          "alarm_days_after_change": 0,
+          "incident_alarm_days": 0,
+          "first_alarm_lag_days": null,
+          "first_alarm_signal": null,
+          "excess_cost_before_alarm": 0.0
+        },
+        "decision_mix": {
+          "false_alarm_days_before_change": 0,
+          "alarm_days_after_change": 0,
+          "incident_alarm_days": 0,
+          "first_alarm_lag_days": null,
+          "first_alarm_signal": null,
+          "excess_cost_before_alarm": 0.0
+        },
+        "early_labels": {
+          "false_alarm_days_before_change": 0,
+          "alarm_days_after_change": 3,
+          "incident_alarm_days": 3,
+          "first_alarm_lag_days": 37,
+          "first_alarm_signal": "excess",
+          "excess_cost_before_alarm": 0.0
+        },
+        "matured_labels": {
+          "false_alarm_days_before_change": 0,
+          "alarm_days_after_change": 3,
+          "incident_alarm_days": 3,
+          "first_alarm_lag_days": 60,
+          "first_alarm_signal": "excess",
+          "excess_cost_before_alarm": 0.0
+        }
+      }
+    },
+    {
+      "scenario": "ato_wave",
+      "post_change_events": 54171,
+      "excess_cost_total": 29474.56,
+      "excess_cost_per_day": 327.4951111111111,
+      "monitors": {
+        "feature_psi": {
+          "false_alarm_days_before_change": 0,
+          "alarm_days_after_change": 0,
+          "incident_alarm_days": 0,
+          "first_alarm_lag_days": null,
+          "first_alarm_signal": null,
+          "excess_cost_before_alarm": 29474.56
+        },
+        "score_psi": {
+          "false_alarm_days_before_change": 0,
+          "alarm_days_after_change": 0,
+          "incident_alarm_days": 0,
+          "first_alarm_lag_days": null,
+          "first_alarm_signal": null,
+          "excess_cost_before_alarm": 29474.56
+        },
+        "decision_mix": {
+          "false_alarm_days_before_change": 0,
+          "alarm_days_after_change": 15,
+          "incident_alarm_days": 15,
+          "first_alarm_lag_days": 6,
+          "first_alarm_signal": null,
+          "excess_cost_before_alarm": 2756.22
+        },
+        "early_labels": {
+          "false_alarm_days_before_change": 0,
+          "alarm_days_after_change": 86,
+          "incident_alarm_days": 83,
+          "first_alarm_lag_days": 4,
+          "first_alarm_signal": "excess",
+          "excess_cost_before_alarm": 2178.542
+        },
+        "matured_labels": {
+          "false_alarm_days_before_change": 0,
+          "alarm_days_after_change": 22,
+          "incident_alarm_days": 19,
+          "first_alarm_lag_days": 62,
+          "first_alarm_signal": "excess",
+          "excess_cost_before_alarm": 20502.020000000004
+        }
+      }
+    },
+    {
+      "scenario": "evasive_bots",
+      "post_change_events": 54490,
+      "excess_cost_total": 1002.5000000000001,
+      "excess_cost_per_day": 11.13888888888889,
+      "monitors": {
+        "feature_psi": {
+          "false_alarm_days_before_change": 0,
+          "alarm_days_after_change": 0,
+          "incident_alarm_days": 0,
+          "first_alarm_lag_days": null,
+          "first_alarm_signal": null,
+          "excess_cost_before_alarm": 1002.5000000000001
+        },
+        "score_psi": {
+          "false_alarm_days_before_change": 0,
+          "alarm_days_after_change": 0,
+          "incident_alarm_days": 0,
+          "first_alarm_lag_days": null,
+          "first_alarm_signal": null,
+          "excess_cost_before_alarm": 1002.5000000000001
+        },
+        "decision_mix": {
+          "false_alarm_days_before_change": 0,
+          "alarm_days_after_change": 0,
+          "incident_alarm_days": 0,
+          "first_alarm_lag_days": null,
+          "first_alarm_signal": null,
+          "excess_cost_before_alarm": 1002.5000000000001
+        },
+        "early_labels": {
+          "false_alarm_days_before_change": 0,
+          "alarm_days_after_change": 5,
+          "incident_alarm_days": 3,
+          "first_alarm_lag_days": 34,
+          "first_alarm_signal": "excess",
+          "excess_cost_before_alarm": 375.0
+        },
+        "matured_labels": {
+          "false_alarm_days_before_change": 0,
+          "alarm_days_after_change": 17,
+          "incident_alarm_days": 14,
+          "first_alarm_lag_days": 65,
+          "first_alarm_signal": "excess",
+          "excess_cost_before_alarm": 732.5000000000001
+        }
+      }
+    },
+    {
+      "scenario": "partner_campaign",
+      "post_change_events": 58502,
+      "excess_cost_total": 2512.0,
+      "excess_cost_per_day": 27.91111111111111,
+      "monitors": {
+        "feature_psi": {
+          "false_alarm_days_before_change": 0,
+          "alarm_days_after_change": 0,
+          "incident_alarm_days": 0,
+          "first_alarm_lag_days": null,
+          "first_alarm_signal": null,
+          "excess_cost_before_alarm": 2512.0
+        },
+        "score_psi": {
+          "false_alarm_days_before_change": 0,
+          "alarm_days_after_change": 0,
+          "incident_alarm_days": 0,
+          "first_alarm_lag_days": null,
+          "first_alarm_signal": null,
+          "excess_cost_before_alarm": 2512.0
+        },
+        "decision_mix": {
+          "false_alarm_days_before_change": 0,
+          "alarm_days_after_change": 0,
+          "incident_alarm_days": 0,
+          "first_alarm_lag_days": null,
+          "first_alarm_signal": null,
+          "excess_cost_before_alarm": 2512.0
+        },
+        "early_labels": {
+          "false_alarm_days_before_change": 0,
+          "alarm_days_after_change": 75,
+          "incident_alarm_days": 72,
+          "first_alarm_lag_days": 15,
+          "first_alarm_signal": "deficit",
+          "excess_cost_before_alarm": 378.0
+        },
+        "matured_labels": {
+          "false_alarm_days_before_change": 0,
+          "alarm_days_after_change": 28,
+          "incident_alarm_days": 26,
+          "first_alarm_lag_days": 63,
+          "first_alarm_signal": "deficit",
+          "excess_cost_before_alarm": 1630.0
+        }
+      }
+    }
+  ],
+  "config": {
+    "scenario": {
+      "change_day": 120,
+      "ato_multiplier": 3.0,
+      "ato_hijack_share": 0.7,
+      "bot_multiplier": 2.0,
+      "partner_blasts_per_day": 1.0,
+      "partner_signups_per_blast": [
+        15,
+        45
+      ]
+    },
+    "labels": {
+      "maturity_days": 60,
+      "delay_sigma": 0.6,
+      "review_delay_days": 1.0,
+      "seed": 1007
+    },
+    "monitors": {
+      "window_days": 7,
+      "cohort_days": 21,
+      "psi_threshold": 0.25,
+      "z_threshold": 4.0,
+      "poisson_alpha": 0.001,
+      "min_excess_ratio": 1.5,
+      "persistence": 2
+    },
+    "simulation": {
+      "seed": 7,
+      "start": "2026-01-01",
+      "n_days": 210,
+      "n_users": 8000,
+      "n_sources": 40,
+      "n_bad_sources": 3,
+      "new_user_share": 0.3,
+      "card_testing_campaigns_per_10k_users_day": 0.25,
+      "ato_incidents_per_10k_users_day": 1.6,
+      "bot_campaigns_per_10k_users_day": 0.16,
+      "friendly_fraud_rate": 0.002
+    },
+    "split": {
+      "train_end_day": 60,
+      "valid_end_day": 75,
+      "calib_end_day": 90
+    }
+  },
+  "robustness": {
+    "seeds": [
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14
+    ],
+    "by_scenario_monitor": [
+      {
+        "scenario": "none",
+        "monitor": "feature_psi",
+        "seeds": 8,
+        "detected": null,
+        "median_lag_days": null,
+        "false_alarm_days": 0
+      },
+      {
+        "scenario": "none",
+        "monitor": "score_psi",
+        "seeds": 8,
+        "detected": null,
+        "median_lag_days": null,
+        "false_alarm_days": 0
+      },
+      {
+        "scenario": "none",
+        "monitor": "decision_mix",
+        "seeds": 8,
+        "detected": null,
+        "median_lag_days": 47.0,
+        "false_alarm_days": 8
+      },
+      {
+        "scenario": "none",
+        "monitor": "early_labels",
+        "seeds": 8,
+        "detected": null,
+        "median_lag_days": 61.0,
+        "false_alarm_days": 4
+      },
+      {
+        "scenario": "none",
+        "monitor": "matured_labels",
+        "seeds": 8,
+        "detected": null,
+        "median_lag_days": 60.0,
+        "false_alarm_days": 7
+      },
+      {
+        "scenario": "ato_wave",
+        "monitor": "feature_psi",
+        "seeds": 8,
+        "detected": 0,
+        "median_lag_days": null,
+        "false_alarm_days": 0
+      },
+      {
+        "scenario": "ato_wave",
+        "monitor": "score_psi",
+        "seeds": 8,
+        "detected": 0,
+        "median_lag_days": null,
+        "false_alarm_days": 0
+      },
+      {
+        "scenario": "ato_wave",
+        "monitor": "decision_mix",
+        "seeds": 8,
+        "detected": 7,
+        "median_lag_days": 8.0,
+        "false_alarm_days": 5
+      },
+      {
+        "scenario": "ato_wave",
+        "monitor": "early_labels",
+        "seeds": 8,
+        "detected": 8,
+        "median_lag_days": 12.0,
+        "false_alarm_days": 0
+      },
+      {
+        "scenario": "ato_wave",
+        "monitor": "matured_labels",
+        "seeds": 8,
+        "detected": 6,
+        "median_lag_days": 65.5,
+        "false_alarm_days": 0
+      },
+      {
+        "scenario": "evasive_bots",
+        "monitor": "feature_psi",
+        "seeds": 8,
+        "detected": 0,
+        "median_lag_days": null,
+        "false_alarm_days": 0
+      },
+      {
+        "scenario": "evasive_bots",
+        "monitor": "score_psi",
+        "seeds": 8,
+        "detected": 0,
+        "median_lag_days": null,
+        "false_alarm_days": 0
+      },
+      {
+        "scenario": "evasive_bots",
+        "monitor": "decision_mix",
+        "seeds": 8,
+        "detected": 3,
+        "median_lag_days": 26.0,
+        "false_alarm_days": 5
+      },
+      {
+        "scenario": "evasive_bots",
+        "monitor": "early_labels",
+        "seeds": 8,
+        "detected": 2,
+        "median_lag_days": 36.5,
+        "false_alarm_days": 0
+      },
+      {
+        "scenario": "evasive_bots",
+        "monitor": "matured_labels",
+        "seeds": 8,
+        "detected": 6,
+        "median_lag_days": 67.5,
+        "false_alarm_days": 0
+      },
+      {
+        "scenario": "partner_campaign",
+        "monitor": "feature_psi",
+        "seeds": 8,
+        "detected": 1,
+        "median_lag_days": 22.0,
+        "false_alarm_days": 0
+      },
+      {
+        "scenario": "partner_campaign",
+        "monitor": "score_psi",
+        "seeds": 8,
+        "detected": 0,
+        "median_lag_days": null,
+        "false_alarm_days": 0
+      },
+      {
+        "scenario": "partner_campaign",
+        "monitor": "decision_mix",
+        "seeds": 8,
+        "detected": 3,
+        "median_lag_days": 15.0,
+        "false_alarm_days": 5
+      },
+      {
+        "scenario": "partner_campaign",
+        "monitor": "early_labels",
+        "seeds": 8,
+        "detected": 7,
+        "median_lag_days": 19.0,
+        "false_alarm_days": 0
+      },
+      {
+        "scenario": "partner_campaign",
+        "monitor": "matured_labels",
+        "seeds": 8,
+        "detected": 5,
+        "median_lag_days": 64.0,
+        "false_alarm_days": 0
+      }
+    ]
+  }
+}

@@ -1,4 +1,4 @@
-"""Command line entry point: ``rde run`` (offline pipeline) and ``rde serve`` (API)."""
+"""Command line entry point: ``rde run``, ``rde serve``, ``rde triage-eval``, ``rde monitor``."""
 
 from __future__ import annotations
 
@@ -61,6 +61,16 @@ def cmd_triage_eval(args: argparse.Namespace) -> None:
     logging.info("Triage report written to %s", path)
 
 
+def cmd_monitor(args: argparse.Namespace) -> None:
+    from rde.monitoring import study as S
+
+    cfg = S.load_study_config(args.config)
+    seeds = args.seeds or [cfg.base.simulation.seed]
+    results = [S.run_study(S.with_seed(cfg, seed)) for seed in seeds]
+    path = S.write_report(results[0], Path(args.out), results[1:])
+    logging.info("Monitoring report written to %s", path)
+
+
 def main(argv: list[str] | None = None) -> None:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
     parser = argparse.ArgumentParser(prog="rde", description=__doc__)
@@ -91,6 +101,12 @@ def main(argv: list[str] | None = None) -> None:
     tri.add_argument("--workers", type=int, default=4)
     tri.add_argument("--out", default="reports/triage")
     tri.set_defaults(func=cmd_triage_eval)
+
+    mon = sub.add_parser("monitor", help="monitoring study: drift scenarios with delayed labels")
+    mon.add_argument("--config", default="configs/monitoring.yaml")
+    mon.add_argument("--seeds", type=int, nargs="*", help="simulated worlds (first one reported)")
+    mon.add_argument("--out", default="reports/monitoring")
+    mon.set_defaults(func=cmd_monitor)
 
     args = parser.parse_args(argv)
     if getattr(args, "n", None) == 0:
