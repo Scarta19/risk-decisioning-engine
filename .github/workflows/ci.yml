@@ -30,6 +30,8 @@ jobs:
         run: pytest
       - name: Smoke run of the full pipeline
         run: rde run --config configs/small.yaml --artifacts /tmp/artifacts --reports /tmp/reports
+      - name: Smoke run of the triage evaluation harness (offline, no API calls)
+        run: rde triage-eval --config configs/small.yaml --backend heuristic --n 0 --out /tmp/triage
 
   docker:
     runs-on: ubuntu-latest

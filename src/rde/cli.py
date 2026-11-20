@@ -39,6 +39,28 @@ def cmd_serve(args: argparse.Namespace) -> None:
     uvicorn.run("rde.serving.app:app", host=args.host, port=args.port)
 
 
+def cmd_triage_eval(args: argparse.Namespace) -> None:
+    from rde.pipeline import run_pipeline
+    from rde.triage import evaluate as E
+    from rde.triage.agent import TriageAgent
+    from rde.triage.cases import CaseStore
+    from rde.triage.llm import AnthropicLLM, ScriptedLLM, heuristic_script
+
+    store = CaseStore.from_pipeline(run_pipeline(_cfg(args.config)))
+    if args.backend == "heuristic":
+        llm, workers = ScriptedLLM(heuristic_script(store)), 1
+    else:
+        llm, workers = AnthropicLLM(args.model, args.effort), args.workers
+    agent = TriageAgent(store, llm)
+    ids = E.sample_cases(store, args.n, args.seed)
+    total = len(store.case_ids())
+    logging.info("Triaging %d of %d review cases with %s", len(ids), total, llm.model)
+    results = E.run(store, agent, ids, workers=workers)
+    summary = E.summarise(store, results, llm.model)
+    path = E.write_report(summary, results, Path(args.out))
+    logging.info("Triage report written to %s", path)
+
+
 def main(argv: list[str] | None = None) -> None:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
     parser = argparse.ArgumentParser(prog="rde", description=__doc__)
@@ -58,7 +80,21 @@ def main(argv: list[str] | None = None) -> None:
     serve.add_argument("--port", type=int, default=8000)
     serve.set_defaults(func=cmd_serve)
 
+    tri = sub.add_parser("triage-eval", help="run the LLM triage agent on review cases")
+    tri.add_argument("--config", default=None)
+    tri.add_argument("--backend", choices=["anthropic", "heuristic"], default="anthropic")
+    tri.add_argument("--model", default="claude-opus-5-5")
+    efforts = ["low", "medium", "high", "xhigh", "max"]
+    tri.add_argument("--effort", choices=efforts, default="medium")
+    tri.add_argument("--n", type=int, default=60, help="cases to sample (0 = all)")
+    tri.add_argument("--seed", type=int, default=0)
+    tri.add_argument("--workers", type=int, default=4)
+    tri.add_argument("--out", default="reports/triage")
+    tri.set_defaults(func=cmd_triage_eval)
+
     args = parser.parse_args(argv)
+    if getattr(args, "n", None) == 0:
+        args.n = None
     args.func(args)
 
 

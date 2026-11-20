@@ -25,6 +25,7 @@ HTTP API that returns the decision together with its expected cost and reasons.
 | Calibrate | Platt vs. isotonic vs. none, chosen on a later, held-out time slice | `rde/modeling/calibration.py` |
 | Decide | Expected cost of each action from unit economics; review capacity enforced with a shadow price | `rde/decision/policy.py` |
 | Evaluate | Ranking, calibration, business cost vs. baselines, recall per fraud pattern, PSI drift | `rde/evaluation/` |
+| Triage | LLM agent that investigates review cases and recommends approve, decline or escalate | `rde/triage/` |
 | Serve | FastAPI service with validation, reason codes (TreeSHAP) and a warm state snapshot | `rde/serving/` |
 
 ## Architecture
@@ -89,6 +90,55 @@ What the run shows, including the less flattering parts:
   data) or a different control.
 * **Synthetic patterns are cleaner than real ones,** so absolute AUC values here are optimistic.
   The value of the repository is the method and the engineering, not the score.
+
+## Triage agent for the review lane
+
+The cost policy sends about 1% of events to a human analyst. `rde.triage` adds an LLM agent
+that prepares each of those reviews: it investigates the case with read-only tools and
+recommends **approve**, **decline** or **escalate** (leave it to the analyst), with a confidence,
+a suspected fraud pattern and the evidence it used.
+
+```mermaid
+flowchart LR
+    CASE[Review case] --> AGENT[Claude, tool loop]
+    AGENT -->|get_case_summary| T1[Score, expected costs, TreeSHAP factors]
+    AGENT -->|get_entity_history| T2[Earlier events of user, device, IP]
+    AGENT -->|find_similar_resolved_cases| T3[Nearest resolved cases and outcomes]
+    AGENT -->|submit_triage| OUT{approve / decline / escalate}
+    OUT -->|escalate, error, refusal, no answer| HUMAN[Analyst queue]
+```
+
+**Guardrails built in.**
+
+* **No answer leakage.** The tools only return what is known at decision time. Labels of the
+  open cases are unreachable; resolved reference cases come from an earlier window. Tests
+  check both.
+* **Fail closed.** A refusal, a tool error loop, a missing or invalid submission or a turn limit
+  all end in `escalate`, which costs exactly what the review lane costs today.
+* **Strict tool schemas** (`strict: true`) so every submission has a valid recommendation,
+  confidence, pattern and evidence list. Evidence must name the tool it came from, and the
+  evaluation checks that the agent actually called that tool.
+* **Claude Opus 5.5** with adaptive thinking, a cached system prompt and tool list, and
+  server-side fallback if the model declines a request.
+
+**The bar it has to clear is high, on purpose.** On the default run the review lane holds 156
+test-window cases, 8.3% of them fraud. Sending all of them to an analyst costs $5.91 per case.
+Letting the model alone decide (decline if p ≥ 0.5) costs $19.64 per case, because one approved
+fraud loses the whole order. So the agent only adds value if it automates the easy cases with
+very high accuracy, escalates the rest, and does it for less than the saving.
+`rde triage-eval` measures exactly that against those baselines and a perfect-information
+lower bound, and reports LLM cost per case, latency and errors.
+
+```bash
+pip install -e ".[dev,agent]"
+export ANTHROPIC_API_KEY=...            # needed only for the real evaluation
+rde triage-eval --n 60                  # stratified sample of review cases, Claude Opus 5.5
+rde triage-eval --backend heuristic     # offline harness check, no API calls
+```
+
+**Status:** the agent, tools, guardrails and evaluation harness are built and tested offline
+with scripted model responses. Results with Claude will be published here once the evaluation
+has been run; none are claimed before then.
 
 ## Design decisions
 
@@ -187,9 +237,10 @@ src/rde/
   decision/         cost-based policy and capacity shadow price
   evaluation/       metrics, PSI, Markdown and PNG report
   serving/          FastAPI app and request/response schemas
+  triage/           LLM triage agent: case tools, agent loop, Claude backend, evaluation
   engine.py         model bundle: booster + calibrator + policy + state snapshot
   pipeline.py       end-to-end offline pipeline
-tests/              31 tests: leakage, parity, policy math, calibration, API contract
+tests/              46 tests: leakage, parity, policy math, calibration, API contract, triage agent
 reports/            generated evaluation report and figures
 ```
 
@@ -215,6 +266,7 @@ This is a reference implementation. Before production use you would change at le
 - [ ] Label-delay simulation and maturity-aware training windows
 - [ ] Redis-backed `FeatureState` and a load test
 - [ ] Champion/challenger evaluation on the same decision policy
+- [ ] Triage agent: publish the Claude evaluation, then compare effort levels and models
 
 ## Author
 
