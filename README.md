@@ -136,9 +136,30 @@ rde triage-eval --n 60                  # stratified sample of review cases, Cla
 rde triage-eval --backend heuristic     # offline harness check, no API calls
 ```
 
-**Status:** the agent, tools, guardrails and evaluation harness are built and tested offline
-with scripted model responses. Results with Claude will be published here once the evaluation
-has been run; none are claimed before then.
+**Results (Claude Opus 5.5, effort `medium`, 60 stratified review cases, seed 0).** Full report:
+[`reports/triage/triage_evaluation.md`](reports/triage/triage_evaluation.md), per-case output in
+`reports/triage/triage_cases.jsonl`.
+
+| Strategy | Per case | Sent to analysts | Fraud approved | Good customers declined |
+|---|---|---|---|---|
+| escalate_all (today) | $6.03 | 100% | 0 | 0 |
+| model_only (decline if p ≥ 0.5) | $13.67 | 0% | 3 | 2 |
+| **agent** | **$5.03** + $0.048 LLM | **75%** | **0** | **0** |
+| oracle (lower bound) | $0.00 | 0% | 0 | 0 |
+
+* The agent automated 15 of 60 cases (all approvals, all correct) and escalated the other 45.
+  It declined none on its own.
+* Net saving vs. escalate_all: **$57.14 on 60 cases** (about $0.95 per case) after $2.86 of LLM
+  cost. Zero errors, zero refusals; evidence always came from tools it actually called; it named
+  the right fraud pattern on 4 of 5 fraud cases. Latency p50 13.8 s, p90 18.2 s, 5.45 tool calls
+  per case on average.
+* The per-case baselines differ from the full-lane figures above ($5.91 and $19.64) because this
+  is a 60-case sample of the 156; compare strategies within the same table.
+
+**Limits.** 60 cases and 15 automated decisions are a small sample: 0 errors in 15 does not prove
+a low error rate. Data is synthetic and costs are illustrative. The agent is conservative by
+design, so most of the review cost remains; the next steps are a run on all 156 cases and an
+effort and model comparison.
 
 ## Design decisions
 
@@ -266,7 +287,8 @@ This is a reference implementation. Before production use you would change at le
 - [ ] Label-delay simulation and maturity-aware training windows
 - [ ] Redis-backed `FeatureState` and a load test
 - [ ] Champion/challenger evaluation on the same decision policy
-- [ ] Triage agent: publish the Claude evaluation, then compare effort levels and models
+- [x] Triage agent: publish the Claude evaluation
+- [ ] Triage agent: run on all review cases, then compare effort levels and models
 
 ## Author
 

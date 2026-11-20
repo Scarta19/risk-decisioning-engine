@@ -1,0 +1,55 @@
+{
+  "model": "claude-opus-5-5",
+  "cases": 60,
+  "fraud_share": 0.083,
+  "strategies": [
+    {
+      "strategy": "escalate_all (today: every case to an analyst)",
+      "fraud_cost_usd": 361.69,
+      "per_case_usd": 6.028,
+      "escalation_rate": 1.0,
+      "automated_accuracy": null,
+      "fraud_approved": 0,
+      "legit_declined": 0
+    },
+    {
+      "strategy": "model_only (decline if p >= 0.5, else approve)",
+      "fraud_cost_usd": 819.99,
+      "per_case_usd": 13.667,
+      "escalation_rate": 0.0,
+      "automated_accuracy": 0.917,
+      "fraud_approved": 3,
+      "legit_declined": 2
+    },
+    {
+      "strategy": "agent",
+      "fraud_cost_usd": 301.69,
+      "per_case_usd": 5.028,
+      "escalation_rate": 0.75,
+      "automated_accuracy": 1.0,
+      "fraud_approved": 0,
+      "legit_declined": 0
+    },
+    {
+      "strategy": "oracle (perfect information, lower bound)",
+      "fraud_cost_usd": 0.0,
+      "per_case_usd": 0.0,
+      "escalation_rate": 0.0,
+      "automated_accuracy": 1.0,
+      "fraud_approved": 0,
+      "legit_declined": 0
+    }
+  ],
+  "agent": {
+    "errors": 0,
+    "error_kinds": [],
+    "pattern_accuracy_on_fraud": 0.8,
+    "evidence_from_tools_actually_called": 1.0,
+    "mean_tool_calls": 5.45,
+    "latency_p50_s": 13.84,
+    "latency_p90_s": 18.19,
+    "llm_cost_total_usd": 2.8605,
+    "llm_cost_per_case_usd": 0.0477,
+    "net_saving_vs_escalate_all_usd": 57.14
+  }
+}
