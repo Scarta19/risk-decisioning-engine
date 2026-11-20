@@ -31,6 +31,9 @@ class PipelineResult:
     metrics: dict[str, Any]
     test_frame: pd.DataFrame  # test events with scores and decisions, for reporting
     calib_frame: pd.DataFrame
+    events: pd.DataFrame | None = None  # all simulated events, in time order
+    features: pd.DataFrame | None = None  # point-in-time features, aligned with ``events``
+    scores: pd.Series | None = None  # calibrated probability for every event
 
 
 def _split(events: pd.DataFrame, cfg: Config) -> pd.Series:
@@ -162,7 +165,7 @@ def run_pipeline(cfg: Config, events: pd.DataFrame | None = None) -> PipelineRes
     metadata["state_snapshot_at"] = str(events["timestamp"].max())
     engine = RiskEngine(booster, calibrator, policy, metadata, state)
     calib_frame = events[c].assign(raw_score=raw[c].to_numpy(), p=p[c].to_numpy())
-    return PipelineResult(engine, metrics, test_frame, calib_frame)
+    return PipelineResult(engine, metrics, test_frame, calib_frame, events, X, p)
 
 
 def save_outputs(result: PipelineResult, artifacts_dir: Path) -> None:
