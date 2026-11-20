@@ -26,6 +26,7 @@ HTTP API that returns the decision together with its expected cost and reasons.
 | Decide | Expected cost of each action from unit economics; review capacity enforced with a shadow price | `rde/decision/policy.py` |
 | Evaluate | Ranking, calibration, business cost vs. baselines, recall per fraud pattern, PSI drift | `rde/evaluation/` |
 | Triage | LLM agent that investigates review cases and recommends approve, decline or escalate | `rde/triage/` |
+| Monitor | Drift scenarios with delayed, decision-dependent labels; early-label vs. drift monitors | `rde/monitoring/` |
 | Serve | FastAPI service with validation, reason codes (TreeSHAP) and a warm state snapshot | `rde/serving/` |
 
 ## Architecture
@@ -140,6 +141,78 @@ rde triage-eval --backend heuristic     # offline harness check, no API calls
 with scripted model responses. Results with Claude will be published here once the evaluation
 has been run; none are claimed before then.
 
+## Monitoring when labels arrive weeks late
+
+A fraud model is usually judged by chargebacks, and chargebacks take weeks. A model that starts
+missing a new attack looks healthy for a month or two, and declined events never get a label
+at all. `rde.monitoring` studies how to notice trouble before the labels mature.
+
+**Set-up** (`configs/monitoring.yaml`, `rde monitor`). The engine is trained on the first 90
+days and then left alone. On day 120 one of four synthetic incidents starts. Labels arrive the
+way they do in practice: analysts label reviews in about a day, approved fraud is confirmed
+after a pattern-specific delay (median 6 days for account takeover up to 40 for friendly
+fraud, capped at 60), approved legitimate events are assumed good after 60 days, and declined
+events are never labelled. Every scenario shares the same history, so the `none` scenario is
+an exact counterfactual and its alarms are false alarms.
+
+| Scenario | What changes | Cost to the business |
+|---|---|---:|
+| `none` | nothing | $0 |
+| `ato_wave` | four times as many account takeovers, 70% from the victim's own device and network | $327 / day |
+| `evasive_bots` | a new affiliate sends bot sign-ups with human-like timing | $11 / day |
+| `partner_campaign` | a genuine partner sends bursts of new customers; the model declines some | $28 / day |
+
+**Monitors**, all computed daily with only the information available that day:
+
+* **Feature PSI and score PSI** against the last pre-deployment window (alarm above 0.25).
+* **Decision mix**: decline and review rates against the 30 days before deployment. Fraud
+  arrives in campaigns, so daily decline rates vary 29 times more than a binomial model
+  predicts; the z-scores are corrected for that (quasi-binomial), otherwise this monitor
+  alarmed on 84 of 120 days in the first world with nothing wrong.
+* **Early labels, age-adjusted.** Each approved event of the last 60 days should have produced
+  `p · F(age)` confirmed frauds by today, where `p` is its calibrated score and `F` the label
+  delay curve fitted on matured history. A Poisson test flags an **excess** (the model approves
+  fraud it does not recognise) or a **deficit** (the model over-scores some traffic, a hint of
+  false declines that labels can never show directly).
+* **Matured labels**: the same test on the newest fully matured week. This is what most teams
+  run, and it cannot fire before day 60.
+
+**Results on 8 simulated worlds** (detections out of 8, median days after the incident starts;
+full report in [`reports/monitoring/monitoring.md`](reports/monitoring/monitoring.md)):
+
+| Scenario | Feature PSI | Score PSI | Decision mix | Early labels | Matured labels |
+|---|---|---|---|---|---|
+| `none` (false alarm days, of 960) | 0 | 0 | 8 | 4 | 7 |
+| `ato_wave` | 0/8 | 0/8 | 7/8, day 8 | **8/8, day 12** | 6/8, day 66 |
+| `evasive_bots` | 0/8 | 0/8 | 3/8, day 26 | 2/8, day 36 | 6/8, day 68 |
+| `partner_campaign` | 1/8, day 22 | 0/8 | 3/8, day 15 | **7/8, day 19** | 5/8, day 64 |
+
+![Monitor signals by scenario](reports/monitoring/figures/monitor_signals.png)
+
+What this shows, including where it falls short:
+
+* **Input drift monitors were blind to all three incidents.** The attacks were built to look
+  normal, and the partner traffic is a small share of all events. PSI is cheap, but a quiet
+  PSI does not mean the model is fine.
+* **Age-adjusted early labels caught the account-takeover wave in 8 of 8 worlds, about 54 days
+  before matured labels.** In the first reported world the alarm came on day 4, after $2,179 of
+  excess losses, against $20,502 by the time matured labels fired.
+* **A deficit of fraud is also a signal.** The partner campaign adds no fraud, so no excess
+  test can see it; the early-label deficit flagged it in 7 of 8 worlds, around day 19.
+* **Slow, cheap incidents stay hidden.** The evasive bots cost $11 a day because the model
+  still stops most of them and fake sign-ups are cheap in this config; no early monitor caught
+  them reliably. Segment-level monitors (per traffic source) are the next step.
+* **No monitor is free of false alarms.** Over 8 worlds × 120 days without an incident, decision
+  mix raised 8 alarm days, early labels 4 and matured labels 7.
+* **Stated simplification:** training and the reference windows use labels that would not be
+  mature at deployment in real life. That shifts timelines, not the method.
+
+```bash
+rde monitor                                       # one world, about 1 minute
+rde monitor --seeds 7 8 9 10 11 12 13 14          # the robustness table above
+rde monitor --config configs/monitoring_small.yaml --out /tmp/monitoring   # CI-sized
+```
+
 ## Design decisions
 
 **One feature implementation for training and serving.** `FeatureState.compute` and `update`
@@ -229,7 +302,8 @@ and purchases without a payment method return `422`.
 ## Repository layout
 
 ```
-configs/            default.yaml (all assumptions), small.yaml (tests and CI)
+configs/            default.yaml (all assumptions), small.yaml (tests and CI),
+                    monitoring.yaml and monitoring_small.yaml (monitoring study)
 src/rde/
   data/             synthetic event simulator
   features/         FeatureState: point-in-time features, offline and online
@@ -238,9 +312,11 @@ src/rde/
   evaluation/       metrics, PSI, Markdown and PNG report
   serving/          FastAPI app and request/response schemas
   triage/           LLM triage agent: case tools, agent loop, Claude backend, evaluation
+  monitoring/       drift scenarios, label delays, daily monitors, monitoring study
   engine.py         model bundle: booster + calibrator + policy + state snapshot
   pipeline.py       end-to-end offline pipeline
-tests/              46 tests: leakage, parity, policy math, calibration, API contract, triage agent
+tests/              59 tests: leakage, parity, policy math, calibration, API contract, triage
+                    agent, monitoring (no future labels, counterfactual scenarios)
 reports/            generated evaluation report and figures
 ```
 
@@ -251,19 +327,22 @@ This is a reference implementation. Before production use you would change at le
 * **Online state store.** State is in-process, so the service runs one worker. A real
   deployment backs the `FeatureState` interface with a shared TTL store (for example Redis)
   and handles late or out-of-order events explicitly.
-* **Label delay.** Chargebacks arrive weeks after the transaction. The simulator assigns labels
-  instantly; a real pipeline must wait for label maturity before training or calibrating.
+* **Label delay.** Chargebacks arrive weeks after the transaction. The training pipeline still
+  uses labels as if they were known instantly; `rde.monitoring` models the delay for
+  monitoring, and training on matured windows only is on the roadmap.
 * **Feedback loop.** Declined events never reveal their true label. Production systems keep a
   small random holdout of approvals to measure performance without bias.
-* **Monitoring.** PSI is computed offline here. In production it would run on live traffic,
-  together with score distribution, decision-rate and cost alerts.
+* **Monitoring.** `rde.monitoring` runs the monitors on simulated production days. In
+  production they would run on live traffic and page someone, and they would need
+  segment-level views that this study does not have yet.
 * **Costs.** The unit economics in `configs/default.yaml` are placeholders and should come from
   finance and operations data.
 
 ## Roadmap
 
-- [ ] Drift scenario in the simulator (fraud adapts after a model launch) and a retraining trigger
-- [ ] Label-delay simulation and maturity-aware training windows
+- [x] Drift scenarios after deployment and label-delay simulation (`rde monitor`)
+- [ ] Segment-level monitors (per traffic source) and a retraining trigger
+- [ ] Maturity-aware training windows
 - [ ] Redis-backed `FeatureState` and a load test
 - [ ] Champion/challenger evaluation on the same decision policy
 - [ ] Triage agent: publish the Claude evaluation, then compare effort levels and models

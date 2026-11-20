@@ -1,0 +1,32 @@
+# Monitoring study (rde monitor). Every value is an explicit assumption, not a measured fact.
+simulation:
+  seed: 7
+  start: "2026-01-01"
+  n_days: 210
+  n_users: 8000
+
+split:              # the model is deployed at calib_end_day and never retrained
+  train_end_day: 60
+  valid_end_day: 75
+  calib_end_day: 90
+
+monitoring:
+  scenario:
+    change_day: 120           # the incident starts 30 days after deployment
+    ato_multiplier: 3.0          # extra incidents on top of the baseline rate (4x in total)
+    ato_hijack_share: 0.7
+    bot_multiplier: 2.0
+    partner_blasts_per_day: 1.0
+    partner_signups_per_blast: [15, 45]
+  labels:
+    maturity_days: 60         # chargeback window: no report after 60 days means legit
+    delay_sigma: 0.6
+    review_delay_days: 1.0
+  monitors:
+    window_days: 7
+    cohort_days: 21
+    psi_threshold: 0.25
+    z_threshold: 4.0
+    poisson_alpha: 0.001
+    min_excess_ratio: 1.5
+    persistence: 2
